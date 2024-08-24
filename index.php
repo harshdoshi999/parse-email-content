@@ -8,6 +8,9 @@ use Dotenv\Dotenv;
 
 require __DIR__ . '/vendor/autoload.php';
 
+// Import functions.php 
+require_once 'functions.php';
+
 $app = AppFactory::create();
 
 // Load environment variables from .env file
@@ -137,10 +140,11 @@ $app->get('/emails/{id}', function (Request $request, Response $response, $args)
 $app->post('/emails', function (Request $request, Response $response) use ($pdo) {
     $data = $request->getParsedBody();
 
-    $raw_text = "TODO";
+    // Extract plain text content
+    $plainTextContent = clean_html($data['email']);
 
     $stmt = $pdo->prepare("INSERT INTO successful_emails (email, raw_text, processed) VALUES (?, ?, true)");
-    $stmt->execute([$data['email'], $raw_text]);
+    $stmt->execute([$data['email'], $plainTextContent]);
 
     $response->getBody()->write(json_encode(['status' => 'Email created']));
     return $response->withHeader('Content-Type', 'application/json');
