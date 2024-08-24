@@ -82,10 +82,38 @@ $app->post('/login', function (Request $request, Response $response) use ($pdo, 
 
 // Get all emails (Protected by JWT)
 $app->get('/emails', function (Request $request, Response $response) use ($pdo) {
-    $stmt = $pdo->query("SELECT * FROM successful_emails");
+    // Get query parameters for pagination
+    $page = $request->getQueryParams()['page'] ?? 1;
+    $perPage = $request->getQueryParams()['per_page'] ?? 10;
+
+    // Ensure that page and per_page are integers and valid
+    $page = filter_var($page, FILTER_VALIDATE_INT, ["options" => ["min_range" => 1]]) ?: 1;
+    $perPage = filter_var($perPage, FILTER_VALIDATE_INT, ["options" => ["min_range" => 1]]) ?: 10;
+
+    // Calculate the offset
+    $offset = ($page - 1) * $perPage;
+
+    // Prepare and execute the SQL query with pagination
+    $stmt = $pdo->prepare("SELECT * FROM successful_emails LIMIT :per_page OFFSET :offset");
+    $stmt->bindValue(':per_page', (int)$perPage, PDO::PARAM_INT);
+    $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
+    $stmt->execute();
     $emails = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    $response->getBody()->write(json_encode($emails));
+    // Get the total number of records for pagination info
+    $countStmt = $pdo->query("SELECT COUNT(*) as total FROM successful_emails");
+    $total = $countStmt->fetchColumn();
+
+    // Build response with pagination info
+    $responseData = [
+        'current_page' => $page,
+        'per_page' => $perPage,
+        'total' => (int)$total,
+        'total_pages' => ceil($total / $perPage),
+        'data' => $emails
+    ];
+
+    $response->getBody()->write(json_encode($responseData));
     return $response->withHeader('Content-Type', 'application/json');
 })->add($jwtMiddleware);
 
