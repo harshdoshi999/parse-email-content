@@ -120,7 +120,7 @@ $app->get('/emails', function (Request $request, Response $response) use ($pdo) 
 // Get a single email by ID (Protected by JWT)
 $app->get('/emails/{id}', function (Request $request, Response $response, $args) use ($pdo) {
     $id = $args['id'];
-    $stmt = $pdo->prepare("SELECT * FROM successful_emails WHERE id = ?");
+    $stmt = $pdo->prepare("SELECT * FROM successful_emails WHERE id = ? AND deleted_at = NULL");
     $stmt->execute([$id]);
     $email = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -137,8 +137,10 @@ $app->get('/emails/{id}', function (Request $request, Response $response, $args)
 $app->post('/emails', function (Request $request, Response $response) use ($pdo) {
     $data = $request->getParsedBody();
 
-    $stmt = $pdo->prepare("INSERT INTO successful_emails (email, raw_text, updated_at) VALUES (?, ?, NOW())");
-    $stmt->execute([$data['email'], $data['raw_text']]);
+    $raw_text = "TODO";
+
+    $stmt = $pdo->prepare("INSERT INTO successful_emails (email, raw_text, processed) VALUES (?, ?, true)");
+    $stmt->execute([$data['email'], $raw_text]);
 
     $response->getBody()->write(json_encode(['status' => 'Email created']));
     return $response->withHeader('Content-Type', 'application/json');
