@@ -1,0 +1,15 @@
+# Enable URL rewriting
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Redirect requests to the index.php file
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^ index.php [L]
+</IfModule>
+
+# Set default charset to UTF-8
+AddDefaultCharset UTF-8
+
+# Disable directory listing
+Options -Indexes
