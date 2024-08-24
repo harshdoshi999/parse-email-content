@@ -149,7 +149,7 @@ $app->put('/emails/{id}', function (Request $request, Response $response, $args)
     $id = $args['id'];
     $data = $request->getParsedBody();
 
-    $stmt = $pdo->prepare("UPDATE successful_emails SET email = ?, raw_text = ?, updated_at = NOW() WHERE id = ?");
+    $stmt = $pdo->prepare("UPDATE successful_emails SET email = ?, raw_text = ? WHERE id = ?");
     $stmt->execute([$data['email'], $data['raw_text'], $id]);
 
     $response->getBody()->write(json_encode(['status' => 'Email updated']));
@@ -160,7 +160,7 @@ $app->put('/emails/{id}', function (Request $request, Response $response, $args)
 $app->delete('/emails/{id}', function (Request $request, Response $response, $args) use ($pdo) {
     $id = $args['id'];
 
-    $stmt = $pdo->prepare("DELETE FROM successful_emails WHERE id = ?");
+    $stmt = $pdo->prepare("UPDATE successful_emails SET deleted_at = NOW() WHERE id = ?");
     $stmt->execute([$id]);
 
     $response->getBody()->write(json_encode(['status' => 'Email deleted']));
